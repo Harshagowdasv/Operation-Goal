@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Daily Task Tracker</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(to right, #e0f7fa, #f1f8e9);
+      padding: 20px;
+      animation: fadeIn 1s ease-in;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+    .container {
+      max-width: 700px;
+      margin: 0 auto;
+      background: #ffffff;
+      padding: 25px;
+      border-radius: 15px;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+      animation: slideUp 0.8s ease-in-out;
+    }
+    @keyframes slideUp {
+      from { transform: translateY(20px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+    h2 {
+      text-align: center;
+      color: #00796b;
+    }
+    .task {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px;
+      margin: 8px 0;
+      border: 1px solid #cfd8dc;
+      border-radius: 8px;
+      background: #f9fbe7;
+      transition: all 0.3s ease;
+    }
+    .task:hover {
+      background-color: #e8f5e9;
+      transform: scale(1.01);
+    }
+    .completed {
+      text-decoration: line-through;
+      color: #388e3c;
+    }
+    button {
+      padding: 8px 14px;
+      background-color: #009688;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+    button:hover {
+      background-color: #00796b;
+    }
+    .streak {
+      text-align: center;
+      font-size: 1.3em;
+      margin-top: 25px;
+      color: #e65100;
+      font-weight: bold;
+    }
+    .time-label {
+      font-weight: bold;
+      color: #5d4037;
+      margin-right: 10px;
+    }
+    .progress-container {
+      margin-top: 20px;
+      background-color: #e0e0e0;
+      border-radius: 20px;
+      overflow: hidden;
+    }
+    .progress-bar {
+      height: 24px;
+      background-color: #4caf50;
+      width: 0%;
+      color: white;
+      font-weight: bold;
+      text-align: center;
+      line-height: 24px;
+      transition: width 0.5s ease;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>Harsha's Daily Task Tracker with Timings</h2>
+    <div class="progress-container">
+      <div class="progress-bar" id="progressBar">0%</div>
+    </div>
+    <div id="taskList"></div>
+    <div class="streak">🔥 Streak: <span id="streakCount">0</span> days</div>
+  </div>
+
+  <script>
+    const tasks = [
+      { time: "6:00 AM", task: "Wake up, freshen up, light exercise/stretching" },
+      { time: "6:30 – 7:00 AM", task: "Meditation / Planning the day / Positive affirmations" },
+      { time: "7:00 – 8:30 AM", task: "📚 Academic Study – Focus on tough subject or upcoming exam topic" },
+      { time: "8:30 – 9:00 AM", task: "Breakfast" },
+      { time: "9:00 – 10:00 AM", task: "💻 DSA – Learn a concept (video, notes, etc.)" },
+      { time: "10:00 – 11:00 AM", task: "DSA Practice – Solve 2–3 problems" },
+      { time: "11:00 – 12:30 PM", task: "🌐 Web Development – Build feature or mini project" },
+      { time: "12:30 – 1:30 PM", task: "Lunch + Power nap (20 mins max)" },
+      { time: "1:30 – 3:00 PM", task: "🎥 YouTube – Record 1 video + Plan Shorts" },
+      { time: "3:00 – 4:00 PM", task: "Shorts creation (edit/schedule 4 shorts)" },
+      { time: "4:00 – 5:30 PM", task: "📚 Academic Study – 2nd subject or revise earlier topic" },
+      { time: "5:30 – 6:00 PM", task: "☕ Tea break (Hostel tea + relax/walk)" },
+      { time: "6:00 – 7:00 PM", task: "🌐 Web Dev/UI Practice – Design a component or fix bugs" },
+      { time: "7:00 – 8:00 PM", task: "Dinner + Relax (music/chat/YouTube reply etc.)" },
+      { time: "8:00 – 9:00 PM", task: "🧠 Light Revision (flashcards, quick notes, or DSA recap)" },
+      { time: "9:00 – 9:30 PM", task: "Plan for tomorrow + Journal or read a motivational book" },
+      { time: "9:30 – 10:00 PM", task: "Wind down (no screens, calm mind)" },
+      { time: "10:00 PM", task: "Sleep 😴 (7+ hours)" }
+    ];
+
+    const taskList = document.getElementById("taskList");
+    const streakCount = document.getElementById("streakCount");
+    const progressBar = document.getElementById("progressBar");
+
+    const todayKey = new Date().toISOString().split("T")[0];
+    const savedData = JSON.parse(localStorage.getItem(todayKey)) || {};
+    let streak = parseInt(localStorage.getItem("streak")) || 0;
+
+    function updateProgressBar() {
+      const completedTasks = Object.keys(savedData).length;
+      const percentage = Math.round((completedTasks / tasks.length) * 100);
+      progressBar.style.width = `${percentage}%`;
+      progressBar.textContent = `${percentage}%`;
+    }
+
+    tasks.forEach(({ time, task }) => {
+      const div = document.createElement("div");
+      div.className = "task";
+      div.innerHTML = `
+        <span><span class="time-label">${time}</span><span class="${savedData[task] ? 'completed' : ''}" id="label-${task}">${task}</span></span>
+        <button onclick="completeTask('${task}')">${savedData[task] ? 'Completed' : 'Complete'}</button>
+      `;
+      taskList.appendChild(div);
+    });
+
+    streakCount.textContent = streak;
+    updateProgressBar();
+
+    function completeTask(taskName) {
+      savedData[taskName] = true;
+      localStorage.setItem(todayKey, JSON.stringify(savedData));
+      document.getElementById(`label-${taskName}`).classList.add("completed");
+      document.querySelector(`button[onclick*='${taskName}']`).textContent = "Completed";
+      updateProgressBar();
+      checkAllCompleted();
+    }
+
+    function checkAllCompleted() {
+      const completedTasks = Object.keys(savedData).length;
+      if (completedTasks === tasks.length) {
+        if (!localStorage.getItem(todayKey + "_done")) {
+          streak++;
+          streakCount.textContent = streak;
+          localStorage.setItem("streak", streak);
+          localStorage.setItem(todayKey + "_done", true);
+        }
+      }
+    }
+
+    function resetStreakAt10PM() {
+      const now = new Date();
+      const hour = now.getHours();
+      if (hour === 22 && !localStorage.getItem(todayKey + '_missed')) {
+        const completedTasks = Object.keys(savedData).length;
+        if (completedTasks !== tasks.length) {
+          streak = 0;
+          streakCount.textContent = 0;
+          localStorage.setItem("streak", 0);
+          localStorage.setItem(todayKey + '_missed', true);
+          alert("⏰ 10 PM passed and all tasks were not completed. Streak reset to 0.");
+        }
+      }
+    }
+
+    setInterval(resetStreakAt10PM, 60000);
+
+    const yesterday = new Date(Date.now() - 86400000).toISOString().split("T")[0];
+    const yesterdayTasks = JSON.parse(localStorage.getItem(yesterday)) || {};
+    if (Object.keys(yesterdayTasks).length !== tasks.length) {
+      if (!localStorage.getItem(yesterday + "_done")) {
+        localStorage.setItem("streak", 0);
+        streakCount.textContent = 0;
+      }
+    }
+  </script>
+</body>
+</html>
